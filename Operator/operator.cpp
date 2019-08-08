@@ -85,7 +85,7 @@ uni10::Matrix<uni10_double64> matSm(uni10_float32 spin){
       2.0,     0.0,     0.0,     0.0, 0.0,\
       0.0, sqrt(6),     0.0,     0.0, 0.0,\
       0.0,     0.0, sqrt(6),     0.0, 0.0,\
-      0.0,     0.0,     0.0,     2.0, 0.0,};
+      0.0,     0.0,     0.0,     2.0, 0.0 };
     return uni10::Matrix<uni10_double64>(dim, dim, mat_elem);
   }
 
@@ -122,7 +122,7 @@ uni10::Matrix<uni10_double64> matSx(uni10_float32 spin){
       2.0,     0.0, sqrt(6),     0.0, 0.0,\
       0.0, sqrt(6),     0.0, sqrt(6), 0.0,\
       0.0,     0.0, sqrt(6),     0.0, 2.0,\
-      0.0,     0.0,     0.0,     2.0, 0.0,};
+      0.0,     0.0,     0.0,     2.0, 0.0 };
     return 0.5 * uni10::Matrix<uni10_double64>(dim, dim, mat_elem);
   }
 	
