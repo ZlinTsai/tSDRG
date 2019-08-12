@@ -270,10 +270,11 @@ uni10::UniTensor<double> MPO::GetTensor()
 }
 
 /// return MPO
-uni10::UniTensor<double> MPO::GetTensor(char loc)      // Q? loc = mpo_loc ==> invalid use of non-static data member
+uni10::UniTensor<double> MPO::GetTensor(char loc)      // loc = mpo_loc ==> invalid use of non-static data member
 {
     uni10::UniTensor<double> mpo;
     vector<int> v;                                     // given non-zero vlaue location
+
     /// check edge
     if ( (mpo_loc == 'l' && loc != 'l' )  || (mpo_loc == 'r' && loc != 'r')  )
     {
@@ -422,15 +423,12 @@ uni10::UniTensor<double> MPO::GetTensorSS()
 /// renormalize group of two MPO
 void RG_MPO(MPO &W1, MPO& W2, uni10::UniTensor<double> VT, uni10::UniTensor<double> V)
 {
-    //cout << "*** TEST RG MPO ***" << endl;
-
     int row = W1.virt_dim;
     VT.SetLabel({-1, 0, 1});
     V.SetLabel({2, 3, -2});
 
     if (W1.mpo_loc == 'l')
     {
-        //cout << "*** mode-left ***" << endl;
         vector<uni10::UniTensor<double> > temp_l;
 
         for (int i=0; i<row; i++)
@@ -446,13 +444,12 @@ void RG_MPO(MPO &W1, MPO& W2, uni10::UniTensor<double> VT, uni10::UniTensor<doub
             temp = uni10::Contract(VT, temp);
             temp = uni10::Contract(temp, V);
             temp_l.push_back(temp);
-            //cout << temp_l[i] << endl;
         }
+
         W1.mpo_l = temp_l;
     }
     else if (W2.mpo_loc == 'r')
     {
-        //cout << "*** mode-right ***" << endl;
         vector<uni10::UniTensor<double> > temp_r;
 
         for (int i=0; i<row; i++)
@@ -472,14 +469,12 @@ void RG_MPO(MPO &W1, MPO& W2, uni10::UniTensor<double> VT, uni10::UniTensor<doub
 
         W2.mpo_r = temp_r;
     }
-    else
+    else // W1.mpo_loc == 'm' && W2.mpo_loc == 'm'
     {
-        //cout << "*** mode-mid ***" << endl;
         vector<uni10::UniTensor<double> > temp_l;
 	    vector<uni10::UniTensor<double> > temp_m;
 	    vector<uni10::UniTensor<double> > temp_r;
 
-        ///
         uni10::Bond bdi(uni10::BD_IN, V.GetBlock().col() );           // row * col; Vs = (3*3 x chi); VTs = (chi x 3*3)
         uni10::Bond bdo(uni10::BD_OUT, V.GetBlock().col() );
         vector<uni10::Bond> bonds = {bdi, bdo}; 
@@ -497,6 +492,7 @@ void RG_MPO(MPO &W1, MPO& W2, uni10::UniTensor<double> VT, uni10::UniTensor<doub
                 else
                     temp += uni10::Otimes(W1.mpo_m[i*row + j], W2.mpo_r[j]);
             }
+
             temp = uni10::Contract(VT, temp);
             temp = uni10::Contract(temp, V);
             temp_r.push_back(temp);

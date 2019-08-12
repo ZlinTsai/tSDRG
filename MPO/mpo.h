@@ -9,7 +9,7 @@
 
 using namespace std;
 
-/// Declare MPO of XXZ model
+/// Declare Matrix product operator
 class MPO
 {
 	private:
