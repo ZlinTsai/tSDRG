@@ -13,14 +13,21 @@
 
 using namespace std;
 
-uni10::UniTensor<double> SetBond(int v_in, int p_in, int v_out, int p_out, int D, int d);
-
 double Distribution_Random_Variable(int model, double var, double Jdis);
 
 void Truncation(uni10::Matrix<double>& En, uni10::Matrix<double>& state, const int chi, int& m, bool& info);
 
-double RG_J(uni10::Matrix<double> En, const int chi, bool& info);
+double find_highest_gap(uni10::Matrix<double> En, const int chi, bool& info);
 
+void tSDRG_OBC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::UniTensor<double> >& VTs, vector<int>& Vs_loc, const int chi, bool& info);
+
+void tSDRG_OBC_regular(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::UniTensor<double> >& VTs, vector<int>& Vs_loc, const int chi, bool& info);
+
+void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::UniTensor<double> >& VTs, vector<int>& Vs_loc, const int chi, bool& info);
+
+void tSDRG_PBC_regular(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::UniTensor<double> >& VTs, vector<int>& Vs_loc, const int chi, bool& info);
+
+/* 
 void tSDRG0(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::UniTensor<double> >& VTs, vector<int>& Vs_loc, const int chi, bool& info);
 
 void tSDRG(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::UniTensor<double> >& VTs, vector<int>& Vs_loc, const int chi, bool& info);
@@ -44,5 +51,5 @@ void tSDRG_PBC_layerBigC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<
 void tSDRG_PBC_layergg(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::UniTensor<double> >& VTs, vector<int>& Vs_loc, const int chi, string dis, const int Pdis, const int Jseed, bool& info);
 
 void tSDRG0_PBC_test(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::UniTensor<double> >& VTs, vector<int>& Vs_loc, const int chi, string dis, const int Pdis, const int Jseed, bool& info);
-
+ */
 #endif
