@@ -9,21 +9,21 @@ MPO::MPO(string model_name, char loc, float spin, ...)
     if (model_name == "XXZ_OBC")
     {
         for (int i=0; i<3; i++)
-            para.push_back(va_arg(vl,double) );
+            para.push_back(va_arg(vl, double) );
 
         MPO_XXZ(loc, spin, para[0], para[1], para[2]);        // para : Jx, Jz, h
     }
     else if (model_name == "XXZ_PBC")
     {
         for (int i=0; i<3; i++)
-            para.push_back(va_arg(vl,double) );
+            para.push_back(va_arg(vl, double) );
             
         MPO_XXZ_PBC(loc, spin, para[0], para[1], para[2]);    // para : Jx, Jz, h
     }
     else if (model_name == "Ising")
     {
         for (int i=0; i<3; i++)
-            para.push_back(va_arg(vl,double) );
+            para.push_back(va_arg(vl, double) );
 
         MPO_Ising(loc, spin, para[0], para[1], para[2]);      // para : J, hx, hz
     }
