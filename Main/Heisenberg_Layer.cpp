@@ -65,7 +65,6 @@ void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, d
 
     /// create folder
     folder = "TTN/algo/Jdis" + dis + "/L" + to_string(L) + "_P" + to_string(Pdis) + "_m" + to_string(chi) + "_" + to_string(Jseed);
-    cout << "finish in " << folder << endl;
     string str = "mkdir -p " + folder;
     const char *mkdir = str.c_str();
     const int dir_err = system(mkdir);
@@ -78,22 +77,27 @@ void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, d
     vector<uni10::UniTensor<double> > w_up;      // w_up is isometry tensor = VT
     vector<int> w_loc;                           // location of each w
     vector<double> En = J_list;                  // J_list will earse to one, and return ground energy.
-    bool info = 1;
-    if (algo == "layer2")
-        tSDRG_PBC_layer2(MPO_chain, En, w_up, w_loc, chi, dis, Pdis, Jseed, info);
-    else if (algo == "Big")
-        tSDRG_PBC_layerBig(MPO_chain, En, w_up, w_loc, chi, dis, Pdis, Jseed, info);
-    else if (algo == "gg")
-        tSDRG_PBC_layergg(MPO_chain, En, w_up, w_loc, chi, dis, Pdis, Jseed, info);
+    bool info = 1;                               // True; if tSDRG can not find non-zero gap, info return 0, and stop this random seed.
+    bool save_RG_info = 1;                       // save gaps at RG stage 
+    tSDRG_PBC(MPO_chain, En, w_up, w_loc, chi, dis, Pdis, Jseed, save_RG_info, info);
 
     /// check info if can not RG_J
     if (info == 0)
+    {
+        cout << "random seed die (can not find non-zero gap) in " << folder << endl;
+        return;
+    }
+    else
+    {
+        cout << "finish in " << folder << endl;
+    }
+    
         return;
 
-    /* for (int i=0; i<1; i++)
+    for (int i=0; i<10; i++)
     {
-        cout << setprecision(16) << abs(En[i] - En[i+1]) << endl;
-    } */
+        cout << setprecision(16) << En[i] << endl;
+    } 
 
     //string top1 = Decision_tree(w_loc, true);
 
