@@ -399,23 +399,24 @@ void tSDRG_OBC_regular(vector<MPO>& MPO_chain, vector<double>& J_list, vector<un
 }
 
 /// tSDRG for PBC
-void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::UniTensor<double> >& VTs, vector<int>& Vs_loc, const int chi, string dis, const int Pdis, const int Jseed, bool save_RG_info, bool& info)
+void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTensor<double> >& VTs, vector<int>& Vs_loc, const int chi, string dis, const int Pdis, const int Jseed, bool save_RG_info, bool& info)
 {
     int L = MPO_chain.size();
 
     vector<int> layer;
     layer.assign(L, 0);
     
+    /// save RG infomation
     vector<int> RG_stage;
     vector<double> RG_lowest_gaps;
     vector<double> RG_highest_gaps;
 
     /// transfor coupling to energy scale (highest gap); energy spactrum of S = 1 is -2J, -J, J, so that highest gaps = 2J
     /// TODO: auto find coefficient
-    for (int i=0; i<J_list.size(); i++)
+    for (int i=0; i<Q.size(); i++)
     {
-        J_list[i] = 2 * J_list[i]; 
-        //cout << J_list[i] << endl;
+        Q[i] = 2 * Q[i]; 
+        //cout << Q[i] << endl;
     }
     
     /// Network
@@ -423,19 +424,19 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::Uni
     
     while(MPO_chain.size() > 2)
     {
-        /// find max J
-        auto jmax = max_element(J_list.begin(), J_list.end() ); // max_element return iterators, not values. ( double Jmax = *jmax; use *iterators to get values.
-        int j = distance(J_list.begin(), jmax);                 // return distance from 0 to jmax. Note: distance(iterators, iterators) NOT value.
-        int chi_loc;                                            // chi of location (chi maybe cut at mutliplet, so chi will change)
+        /// find max gap = max{Q}
+        auto Qmax = max_element(Q.begin(), Q.end() );      // max_element return iterators, not values. ( double Qmax = *Qmax; use *iterators to get values.
+        int j = distance(Q.begin(), Qmax);                 // return distance from 0 to Qmax. Note: distance(iterators, iterators) NOT value.
+        int chi_loc;                                       // chi of location (chi maybe cut at mutliplet, so chi will change)
         
-        //cout << "MPO size = " << MPO_chain.size() << " , jmax = " << *jmax << endl;
-        //for (int i=0; i<J_list.size(); i++)
-            //cout << setprecision(16) << J_list[i] << endl;
+        //cout << "MPO size = " << MPO_chain.size() << " , Qmax = " << *Qmax << endl;
+        //for (int i=0; i<Q.size(); i++)
+            //cout << setprecision(16) << Q[i] << endl;
         
             
         /// Contract two site hamitonian
         uni10::UniTensor<double> H, H1, H2;                     // H is hamitonian of site1(= H1) and site2(= H2)
-        if (j == J_list.size()-1)
+        if (j == Q.size()-1)
         {
             H1 = MPO_chain[j].GetTensor('l');
             H2 = MPO_chain[0].GetTensor('r');
@@ -459,22 +460,22 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::Uni
         H_block = H.GetBlock();
         uni10::EigH(H_block, En, state, uni10::INPLACE);
 
-        if (j == J_list.size()-1)
-        {
-            layer[j] = max(layer[j], layer[0]) + 1;
-            layer.erase(layer.begin() + 0);
-        }
-        else
-        {
-            layer[j] = max(layer[j], layer[j+1]) + 1;
-            layer.erase(layer.begin() + j + 1);
-        }
-
         if (save_RG_info)
         {
+            if (j == Q.size()-1)
+            {
+                layer[j] = max(layer[j], layer[0]) + 1;
+                layer.erase(layer.begin() + 0);
+            }
+            else
+            {
+                layer[j] = max(layer[j], layer[j+1]) + 1;
+                layer.erase(layer.begin() + j + 1);
+            }
+
             double gap_lowest = abs(En.At(1, 1) - En.At(0, 0));
             RG_stage.push_back(layer[j]);
-            RG_highest_gaps.push_back(*jmax);
+            RG_highest_gaps.push_back(*Qmax);
             RG_lowest_gaps.push_back(gap_lowest);
         }
 
@@ -502,7 +503,7 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::Uni
         uni10::Permute(V, {-1, -3, 1}, 2, uni10::INPLACE);
 
         /// RG two site MPO
-        if (j == J_list.size()-1)
+        if (j == Q.size()-1)
             RG_MPO(MPO_chain[j], MPO_chain[0], VT, V);
         else
             RG_MPO(MPO_chain[j], MPO_chain[j+1], VT, V);
@@ -513,7 +514,7 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::Uni
         Vs_loc.push_back(j);
 
         /// erase j+1, except j+1 is most left mpo 
-        if (j == J_list.size()-1)
+        if (j == Q.size()-1)
             MPO_chain.erase(MPO_chain.begin() + 0);
         else
             MPO_chain.erase(MPO_chain.begin() + j + 1);
@@ -523,13 +524,13 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::Uni
         {
             if (j == 0)
             {
-                H1 = MPO_chain[J_list.size()-2].GetTensor('l');
+                H1 = MPO_chain[Q.size()-2].GetTensor('l');
                 H2 = MPO_chain[j              ].GetTensor('r');
                 H12.PutTensor("H1", H1);
                 H12.PutTensor("H2", H2);
                 H12.Launch(H);
                 uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
-                J_list[J_list.size()-1] = find_highest_gap(En, chi, info);
+                Q[Q.size()-1] = find_highest_gap(En, chi, info);
 
                 H1 = MPO_chain[j  ].GetTensor('l');
                 H2 = MPO_chain[j+1].GetTensor('r');
@@ -537,9 +538,9 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::Uni
                 H12.PutTensor("H2", H2);
                 H12.Launch(H);
                 uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
-                J_list[j+1] = find_highest_gap(En, chi, info);
+                Q[j+1] = find_highest_gap(En, chi, info);
             }
-            else if (j == J_list.size()-2)
+            else if (j == Q.size()-2)
             {
                 H1 = MPO_chain[j-1].GetTensor('l');
                 H2 = MPO_chain[j  ].GetTensor('r');
@@ -547,7 +548,7 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::Uni
                 H12.PutTensor("H2", H2);
                 H12.Launch(H);
                 uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
-                J_list[j-1] = find_highest_gap(En, chi, info);
+                Q[j-1] = find_highest_gap(En, chi, info);
 
                 H1 = MPO_chain[j].GetTensor('l');
                 H2 = MPO_chain[0].GetTensor('r');
@@ -555,9 +556,9 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::Uni
                 H12.PutTensor("H2", H2);
                 H12.Launch(H);
                 uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
-                J_list[j+1] = find_highest_gap(En, chi, info);
+                Q[j+1] = find_highest_gap(En, chi, info);
             }
-            else if (j == J_list.size()-1)
+            else if (j == Q.size()-1)
             {
                 H1 = MPO_chain[j-2].GetTensor('l');
                 H2 = MPO_chain[j-1].GetTensor('r');
@@ -565,7 +566,7 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::Uni
                 H12.PutTensor("H2", H2);
                 H12.Launch(H);
                 uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
-                J_list[j-1] = find_highest_gap(En, chi, info);
+                Q[j-1] = find_highest_gap(En, chi, info);
 
                 H1 = MPO_chain[j-1].GetTensor('l');
                 H2 = MPO_chain[0].GetTensor('r');
@@ -573,7 +574,7 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::Uni
                 H12.PutTensor("H2", H2);
                 H12.Launch(H);
                 uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
-                J_list[0] = find_highest_gap(En, chi, info);
+                Q[0] = find_highest_gap(En, chi, info);
             }
             else
             {
@@ -583,7 +584,7 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::Uni
                 H12.PutTensor("H2", H2);
                 H12.Launch(H);
                 uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
-                J_list[j-1] = find_highest_gap(En, chi, info);
+                Q[j-1] = find_highest_gap(En, chi, info);
 
                 H1 = MPO_chain[j  ].GetTensor('l');
                 H2 = MPO_chain[j+1].GetTensor('r');
@@ -591,7 +592,7 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::Uni
                 H12.PutTensor("H2", H2);
                 H12.Launch(H);
                 uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
-                J_list[j+1] = find_highest_gap(En, chi, info);
+                Q[j+1] = find_highest_gap(En, chi, info);
             }
         }
         
@@ -599,7 +600,7 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::Uni
             return;
         
         /// erase J list at j (merge coupling)
-        J_list.erase(J_list.begin() + j);
+        Q.erase(Q.begin() + j);
     }
 
     /// Contract last two site hamitonian
@@ -649,8 +650,8 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& J_list, vector<uni10::Uni
     for (int i=0; i<En.col(); i++)
         energy.push_back(En.At(i, i) );
 
-    J_list.clear();
-    J_list = energy;
+    Q.clear();
+    Q = energy;
 
     double lowest_gap = energy[1] - energy[0];
     layer[0] = max(layer[0], layer[1]) + 1;
