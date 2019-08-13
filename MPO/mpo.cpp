@@ -176,7 +176,7 @@ void MPO::MPO_XXZ_PBC(char loc, float spin, float Jx, float Jz, float h)
 {
     mpo_loc  = loc;
     phys_dim = (int)(2*spin) + 1 ;
-    virt_dim = 8;
+    virt_dim = 5;
     uni10::Bond bdi = spin_bond(spin, uni10::BD_IN);
     uni10::Bond bdo = spin_bond(spin, uni10::BD_OUT);
     vector<uni10::Bond> bonds = {bdi, bdo};
