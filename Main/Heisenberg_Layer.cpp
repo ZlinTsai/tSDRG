@@ -84,7 +84,7 @@ void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, d
     /// check info if can not RG_J
     if (info == 0)
     {
-        cout << "random seed die (can not find non-zero gap) in " << folder << endl;
+        cout << "random seed " + to_string(Jseed)  + " died (can not find non-zero gap) " << endl;
         return;
     }
     else

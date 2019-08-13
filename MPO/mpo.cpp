@@ -11,7 +11,7 @@ MPO::MPO(string model_name, char loc, float spin, ...)
         for (int i=0; i<3; i++)
             para.push_back(va_arg(vl, double) );
 
-        MPO_XXZ(loc, spin, para[0], para[1], para[2]);        // para : Jx, Jz, h
+        MPO_XXZ_OBC(loc, spin, para[0], para[1], para[2]);        // para : Jx, Jz, h
     }
     else if (model_name == "XXZ_PBC")
     {
@@ -98,7 +98,7 @@ void MPO::MPO_Ising(char loc, float spin, float J, float hx, float hz)
 }
 
 /// Declare MPO of XXZ model (OBC)
-void MPO::MPO_XXZ(char loc, float spin, float Jx, float Jz, float h) 
+void MPO::MPO_XXZ_OBC(char loc, float spin, float Jx, float Jz, float h) 
 {
     mpo_loc  = loc;
     phys_dim = (int)(2*spin) + 1 ;
