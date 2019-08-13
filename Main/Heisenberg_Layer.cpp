@@ -91,8 +91,6 @@ void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, d
     {
         cout << "finish in " << folder << endl;
     }
-    
-        return;
 
     for (int i=0; i<10; i++)
     {
