@@ -401,6 +401,10 @@ void tSDRG_OBC_regular(vector<MPO>& MPO_chain, vector<double>& J_list, vector<un
 /// tSDRG for PBC
 void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTensor<double> >& VTs, vector<int>& Vs_loc, const int chi, string dis, const int Pdis, const int Jseed, bool save_RG_info, bool& info)
 {
+    /// loading Network file
+    uni10::Network H12("../tSDRG_net/H12.net");
+
+    /// find system size 
     int L = MPO_chain.size();
 
     vector<int> layer;
@@ -411,6 +415,30 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
     vector<double> RG_lowest_gaps;
     vector<double> RG_highest_gaps;
 
+    /// Contract any two site hamitonian in order to find highest gap
+    uni10::UniTensor<double> H, H_last, H1, H2;             // H is hamitonian of site-1(= H1) and site-2(= H2)  
+    H1 = MPO_chain[1].GetTensor('l');
+    H2 = MPO_chain[2].GetTensor('r');
+    H12.PutTensor("H1", H1);
+    H12.PutTensor("H2", H2);
+    H12.Launch(H);
+
+    /// diagonal local hamitonian
+    uni10::Matrix<double> En;                               // eigen energy
+    uni10::Matrix<double> state;                            // eigen state
+    uni10::Matrix<double> H_block;
+    H_block = H.GetBlock();
+    uni10::EigH(H_block, En, state, uni10::INPLACE);
+
+    for (int i=0; i<En.col(); i++)
+        cout << En.At(i, i) << endl;
+
+    bool test;
+    double coeff = find_highest_gap(En, chi, test);
+    cout << "ans = " << coeff << endl;
+    cout << "Q[1]" << Q[1] << endl;
+    cout << "x = " << coeff/Q[1] << endl;
+
     /// transfor coupling to energy scale (highest gap); energy spactrum of S = 1 is -2J, -J, J, so that highest gaps = 2J
     /// TODO: auto find coefficient
     for (int i=0; i<Q.size(); i++)
@@ -418,9 +446,6 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
         Q[i] = 2 * Q[i]; 
         //cout << Q[i] << endl;
     }
-    
-    /// Network
-    uni10::Network H12("../tSDRG_net/H12.net");
     
     while(MPO_chain.size() > 2)
     {
@@ -435,9 +460,7 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
         //for (int i=0; i<Q.size(); i++)
             //cout << setprecision(16) << Q[i] << endl;
         
-            
         /// Contract two site hamitonian
-        uni10::UniTensor<double> H, H1, H2;                     // H is hamitonian of site-1(= H1) and site-2(= H2)   
         H1 = MPO_chain[s1].GetTensor('l');
         H2 = MPO_chain[s2].GetTensor('r');
         H12.PutTensor("H1", H1);
@@ -445,9 +468,6 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
         H12.Launch(H);
 
         /// diagonal local hamitonian
-        uni10::Matrix<double> En;                               // eigen energy
-        uni10::Matrix<double> state;                            // eigen state
-        uni10::Matrix<double> H_block;
         H_block = H.GetBlock();
         uni10::EigH(H_block, En, state, uni10::INPLACE);
 
@@ -582,8 +602,6 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
     }
 
     /// Contract last two site hamitonian
-    uni10::UniTensor<double> H, H_last, H1, H2;                     // H is hamitonian of site1(= H1) and site2(= H2)
-
     /// 1 and 0; use spcai tools GetTensorPBC for getting real term
     H1 = MPO_chain[1].GetTensorPBC('l');
     H2 = MPO_chain[0].GetTensorPBC('r');
@@ -601,9 +619,6 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
     H12.Launch(H);
     
     /// diagonal
-    uni10::Matrix<double> En;                               // eigen energy
-    uni10::Matrix<double> state;                            // eigen state
-    uni10::Matrix<double> H_block;
     H_block = H.GetBlock() + H_last.GetBlock();
     uni10::EigH(H_block, En, state, uni10::INPLACE);
     uni10::Resize(state, 1, state.col(), uni10::INPLACE);
