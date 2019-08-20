@@ -15,9 +15,9 @@ using namespace std;
 
 void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, double Jz, double h, int Jseed)
 {
-    random_device rd;       // non-deterministic generator.
-    mt19937 gen1(rd() );    // use mersenne twister and seed is rd.
-    mt19937 gen2(Jseed);    // use mersenne twister and seed is fixed!
+    random_device rd;            // non-deterministic generator.
+    mt19937 genRandom(rd() );    // use mersenne twister and seed is rd.
+    mt19937 genFixed(Jseed);     // use mersenne twister and seed is fixed!
 
     uniform_real_distribution<double> Dist_J(nextafter(0.0, 1.0), 1.0); // probability distribution of J rand(0^+ ~ 1)
 
@@ -25,27 +25,15 @@ void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, d
     vector<double> J_list;
     for(int i=0; i<L; i++)
     {
-        double jvar = Dist_J(gen2);
-        if(Pdis == 87)
-        {
-            if(i < L/2)
-                jvar = i + 1;
-            else    
-                jvar = L - i;
-        }
-        else
-            jvar = Distribution_Random_Variable(Pdis, jvar, Jdis);
+        double jvar = Dist_J(genFixed);
+        jvar = Distribution_Random_Variable(Pdis, jvar, Jdis);
         J_list.push_back(jvar);
     }
-    //double jmax = *max_element(J_list.begin(), J_list.end() );
-    double jmax = 1;
 
     /// create MPO chain 
     vector<MPO> MPO_chain;
     for(int i=0; i<L; i++)
     {
-        J_list[i] = J_list[i] / jmax;    // stably
-
         MPO W("XXZ_PBC", 'm', S, J_list[i], Jz*J_list[i], h);
         MPO_chain.push_back(W);
     }
@@ -93,9 +81,7 @@ void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, d
     }
 
     for (int i=0; i<10; i++)
-    {
-        cout << setprecision(16) << En[i] << endl;
-    } 
+        cout << En[i] << endl;
 
     //string top1 = Decision_tree(w_loc, true);
 
@@ -163,7 +149,7 @@ void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, d
     fout << "energy" << endl;
     for (int i=0; i<En.size(); i++)
     {
-        fout << setprecision(16) << jmax*En[i] << endl;
+        fout << setprecision(16) << En[i] << endl;
     }
     fout.flush();
     fout.close();
