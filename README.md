@@ -28,21 +28,25 @@ ROOTS         := /usr/local/uni10
 ```shell
 make code=yourcode.cpp name=yourcode.exe
 ```
-## Introduction my code
 
-### Include header file
+## Directory
 
-* Operator.h
+* Operator
     * spin operator
 
-* MPO.h
+* MPO
     * matrix product operator
 
-* Hamiltonian.h
+* Hamiltonian
     * Hamiltonian model
 
-* tSDRG_tools.h
+* tSDRG_tools
     * tSDRG main algorithm and other tools of  tSDRG 
+    
+* tSDRG_net
+    * network file
 
+* Main
+    * main.cpp
 
 Coming sooooooooon
