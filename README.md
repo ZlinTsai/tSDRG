@@ -49,4 +49,10 @@ make code=yourcode.cpp name=yourcode.exe
 * Main
     * main.cpp
 
+## Tutorials
+
+```c++
+generateTTN(L, chi, Pdis, Jdis, algo, S, Jz, h, Jseed);
+```
+
 Coming sooooooooon
