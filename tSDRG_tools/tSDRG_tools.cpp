@@ -433,17 +433,16 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
     for (int i=0; i<En.col(); i++)
         cout << En.At(i, i) << endl;
 
-    bool test;
-    double coeff = find_highest_gap(En, chi, test);
+    double coeff = find_highest_gap(En, chi, info);
     cout << "ans = " << coeff << endl;
-    cout << "Q[1]" << Q[1] << endl;
+    cout << "Q[1] = " << Q[1] << endl;
     cout << "x = " << coeff/Q[1] << endl;
+    coeff = coeff/Q[1];
 
     /// transfor coupling to energy scale (highest gap); energy spactrum of S = 1 is -2J, -J, J, so that highest gaps = 2J
-    /// TODO: auto find coefficient
     for (int i=0; i<Q.size(); i++)
     {
-        Q[i] = 2 * Q[i]; 
+        Q[i] = coeff * Q[i]; 
         //cout << Q[i] << endl;
     }
     

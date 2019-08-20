@@ -37,15 +37,11 @@ void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, d
             jvar = Distribution_Random_Variable(Pdis, jvar, Jdis);
         J_list.push_back(jvar);
     }
-    //double jmax = *max_element(J_list.begin(), J_list.end() );
-    double jmax = 1;
 
     /// create MPO chain 
     vector<MPO> MPO_chain;
     for(int i=0; i<L; i++)
     {
-        J_list[i] = J_list[i] / jmax;    // stably
-
         MPO W("XXZ_PBC", 'm', S, J_list[i], Jz*J_list[i], h);
         MPO_chain.push_back(W);
     }
@@ -163,7 +159,7 @@ void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, d
     fout << "energy" << endl;
     for (int i=0; i<En.size(); i++)
     {
-        fout << setprecision(16) << jmax*En[i] << endl;
+        fout << setprecision(16) << En[i] << endl;
     }
     fout.flush();
     fout.close();
