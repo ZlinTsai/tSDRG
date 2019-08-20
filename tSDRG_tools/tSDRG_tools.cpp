@@ -429,15 +429,7 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
     uni10::Matrix<double> H_block;
     H_block = H.GetBlock();
     uni10::EigH(H_block, En, state, uni10::INPLACE);
-
-    for (int i=0; i<En.col(); i++)
-        cout << En.At(i, i) << endl;
-
     double coeff = find_highest_gap(En, chi, info);
-    cout << "ans = " << coeff << endl;
-    cout << "Q[1] = " << Q[1] << endl;
-    cout << "x = " << coeff/Q[1] << endl;
-    coeff = coeff/Q[1];
 
     /// transfor coupling to energy scale (highest gap); energy spactrum of S = 1 is -2J, -J, J, so that highest gaps = 2J
     for (int i=0; i<Q.size(); i++)
@@ -645,15 +637,17 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
     Q.clear();
     Q = energy;
 
-    double lowest_gap = energy[1] - energy[0];
-    layer[0] = max(layer[0], layer[1]) + 1;
-    layer.erase(layer.begin() + 1);
-    RG_stage.push_back(layer[0]);
-    RG_highest_gaps.push_back(lowest_gap);
-    RG_lowest_gaps.push_back(lowest_gap);
-
     if (save_RG_info)
     {
+        /// save last RG info
+        double lowest_gap = energy[1] - energy[0];
+        layer[0] = max(layer[0], layer[1]) + 1;
+        layer.erase(layer.begin() + 1);
+        RG_stage.push_back(layer[0]);
+        RG_highest_gaps.push_back(lowest_gap);
+        RG_lowest_gaps.push_back(lowest_gap);
+
+        /// saving data into folder
         string file1, file2, folder;
         folder = "TTN/algo/Jdis" + dis + "/L" + to_string(L) + "_P" + to_string(Pdis) + "_m" + to_string(chi) + "_" + to_string(Jseed);
         file1 = folder + "/RG_highest_gaps.csv";
