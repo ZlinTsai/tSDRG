@@ -83,7 +83,7 @@ void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, d
     for (int i=0; i<10; i++)
         cout << En[i] << endl;
 
-    //string top1 = Decision_tree(w_loc, true);
+    string top1 = Decision_tree(w_loc, true);
 
     /// create isometry of other part
     /*vector<uni10::UniTensor<double> > w_down;    // w_down
