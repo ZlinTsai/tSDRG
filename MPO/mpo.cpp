@@ -405,7 +405,7 @@ uni10::UniTensor<double> MPO::GetTensorSS()
 
         case 'm':
             {
-                int single = virt_dim*(virt_dim - 1);
+                int single = virt_dim * (virt_dim - 1);
                 mpo = mpo_m[single];
             }
             break;

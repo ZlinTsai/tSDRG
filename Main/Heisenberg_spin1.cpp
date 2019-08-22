@@ -21,21 +21,42 @@ void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, d
 
     uniform_real_distribution<double> Dist_J(nextafter(0.0, 1.0), 1.0); // probability distribution of J rand(0^+ ~ 1)
 
-    /// create coupling
-    vector<double> J_list;
+    /// create MPO chain for PBC
+    /* vector<MPO> MPO_chain;
     for(int i=0; i<L; i++)
     {
         double jvar = Dist_J(genFixed);
         jvar = Distribution_Random_Variable(Pdis, jvar, Jdis);
         J_list.push_back(jvar);
-    }
+        MPO W("XXZ_PBC", 'm', S, J_list[i], Jz*J_list[i], h);
+        MPO_chain.push_back(W);
+    } */
 
-    /// create MPO chain 
+    /// create coupling list and MPO chain for OBC
+    vector<double> J_list;
     vector<MPO> MPO_chain;
     for(int i=0; i<L; i++)
     {
-        MPO W("XXZ_PBC", 'm', S, J_list[i], Jz*J_list[i], h);
-        MPO_chain.push_back(W);
+        double jvar = Dist_J(genFixed);
+        jvar = Distribution_Random_Variable(Pdis, jvar, Jdis);
+
+        if(i == 0)
+        {
+            J_list.push_back(jvar);     //random chain 
+            MPO W("XXZ_OBC", 'l', S, J_list[i], Jz*J_list[i], h);
+            MPO_chain.push_back(W);
+        }
+        else if (i > 0 && i < L-1)
+        {
+            J_list.push_back(jvar);     //random chain 
+            MPO W("XXZ_OBC", 'm', S, J_list[i], Jz*J_list[i], h);
+            MPO_chain.push_back(W);
+        }
+        else
+        {
+            MPO W("XXZ_OBC", 'r', S, 1, Jz, h);
+            MPO_chain.push_back(W);
+        }
     }
 
     /// Save tree tensor network
@@ -83,7 +104,7 @@ void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, d
     for (int i=0; i<10; i++)
         cout << En[i] << endl;
 
-    string top1 = Decision_tree(w_loc, true);
+    //string top1 = Decision_tree(w_loc, true);
 
     /// create isometry of other part
     /*vector<uni10::UniTensor<double> > w_down;    // w_down

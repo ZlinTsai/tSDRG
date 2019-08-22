@@ -407,6 +407,15 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
     /// find system size 
     int L = MPO_chain.size();
 
+    /// check boundary condition, ex: model = XXZ_PBC, BC = model[-3] + model[-2] + model[-1] = PBC
+    string model = MPO_chain[0].model;
+    string BC = "";
+    for (int i = 3; i >= 1; i--)
+        BC += model.at(model.size() - i);
+
+    cout << BC << endl;
+
+    /// create RG-layer
     vector<int> layer;
     layer.assign(L, 0);
     
@@ -443,11 +452,11 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
         /// find max gap = max{Q}
         auto Qmax = max_element(Q.begin(), Q.end() );      // max_element return iterators, not values. ( double Qmax = *Qmax; use *iterators to get values.
         int s1 = distance(Q.begin(), Qmax);                // return distance from 0 to Qmax. Note: distance(iterators, iterators) input is iter NOT value.
-        int s2 = (s1 == Q.size()-1 ? 0 : s1 + 1);          // s1 = site1 and "coupling label", s2 = site2, for PBC s2+1 = 0 at last site.
+        int s2 = (s1 == MPO_chain.size()-1 ? 0 : s1 + 1);          // s1 = site1 and "coupling label", s2 = site2, for PBC s2+1 = 0 at last site.
         int chi_loc;                                       // chi of location (chi maybe cut at mutliplet, so chi will change).
         
         /// check 
-        //cout << "MPO size = " << MPO_chain.size() << " , Qmax = " << *Qmax << endl;
+        cout << "MPO size = " << MPO_chain.size() << " , Qmax = " << *Qmax <<  ", MPO localtion = " << s1 << " and " << s2 << endl;
         //for (int i=0; i<Q.size(); i++)
             //cout << setprecision(16) << Q[i] << endl;
         
@@ -457,7 +466,7 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
         H12.PutTensor("H1", H1);
         H12.PutTensor("H2", H2);
         H12.Launch(H);
-
+        
         /// diagonal local hamitonian
         H_block = H.GetBlock();
         uni10::EigH(H_block, En, state, uni10::INPLACE);
@@ -507,81 +516,118 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
 
         /// erase s2
         MPO_chain.erase(MPO_chain.begin() + s2);
-
-        /// RG coupling into merge list, notice eage mpo
+        
+        /// RG coupling into merge list, notice that eage mpo is OBC or PBC
         if (MPO_chain.size() != 2)
         {
-            if (s1 == 0)
+            if (BC == "PBC")
             {
-                H1 = MPO_chain[Q.size()-2].GetTensor('l');   // -2 by erase MPO[s2] above line
-                H2 = MPO_chain[     0    ].GetTensor('r');
-                H12.PutTensor("H1", H1);
-                H12.PutTensor("H2", H2);
-                H12.Launch(H);
-                uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
-                Q[Q.size()-1] = find_highest_gap(En, chi, info);
+            
+                if (s1 == 0)
+                {
+                    H1 = MPO_chain[Q.size()-2].GetTensor('l');   // -2 by erase MPO[s2] above line
+                    H2 = MPO_chain[0         ].GetTensor('r');
+                    H12.PutTensor("H1", H1);
+                    H12.PutTensor("H2", H2);
+                    H12.Launch(H);
+                    uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
+                    Q[Q.size()-1] = find_highest_gap(En, chi, info);
 
-                H1 = MPO_chain[0].GetTensor('l');
-                H2 = MPO_chain[1].GetTensor('r');
-                H12.PutTensor("H1", H1);
-                H12.PutTensor("H2", H2);
-                H12.Launch(H);
-                uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
-                Q[1] = find_highest_gap(En, chi, info);
+                    H1 = MPO_chain[0].GetTensor('l');
+                    H2 = MPO_chain[1].GetTensor('r');
+                    H12.PutTensor("H1", H1);
+                    H12.PutTensor("H2", H2);
+                    H12.Launch(H);
+                    uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
+                    Q[1] = find_highest_gap(En, chi, info);
+                }
+                else if (s1 == Q.size()-2)
+                {
+                    H1 = MPO_chain[s1-1].GetTensor('l');
+                    H2 = MPO_chain[s1  ].GetTensor('r');
+                    H12.PutTensor("H1", H1);
+                    H12.PutTensor("H2", H2);
+                    H12.Launch(H);
+                    uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
+                    Q[s1-1] = find_highest_gap(En, chi, info);
+
+                    H1 = MPO_chain[s1].GetTensor('l');
+                    H2 = MPO_chain[0 ].GetTensor('r');
+                    H12.PutTensor("H1", H1);
+                    H12.PutTensor("H2", H2);
+                    H12.Launch(H);
+                    uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
+                    Q[s1+1] = find_highest_gap(En, chi, info);
+                }
+                else if (s1 == Q.size()-1)
+                {
+                    H1 = MPO_chain[s1-2].GetTensor('l');
+                    H2 = MPO_chain[s1-1].GetTensor('r');
+                    H12.PutTensor("H1", H1);
+                    H12.PutTensor("H2", H2);
+                    H12.Launch(H);
+                    uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
+                    Q[s1-1] = find_highest_gap(En, chi, info);
+
+                    H1 = MPO_chain[s1-1].GetTensor('l');
+                    H2 = MPO_chain[0   ].GetTensor('r');
+                    H12.PutTensor("H1", H1);
+                    H12.PutTensor("H2", H2);
+                    H12.Launch(H);
+                    uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
+                    Q[0] = find_highest_gap(En, chi, info);
+                }
+                else
+                {
+                    H1 = MPO_chain[s1-1].GetTensor('l');
+                    H2 = MPO_chain[s1  ].GetTensor('r');
+                    H12.PutTensor("H1", H1);
+                    H12.PutTensor("H2", H2);
+                    H12.Launch(H);
+                    uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
+                    Q[s1-1] = find_highest_gap(En, chi, info);
+
+                    H1 = MPO_chain[s1  ].GetTensor('l');
+                    H2 = MPO_chain[s1+1].GetTensor('r');
+                    H12.PutTensor("H1", H1);
+                    H12.PutTensor("H2", H2);
+                    H12.Launch(H);
+                    uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
+                    Q[s1+1] = find_highest_gap(En, chi, info);
+                }
             }
-            else if (s1 == Q.size()-2)
+        
+            else if (BC == "OBC")
             {
-                H1 = MPO_chain[s1-1].GetTensor('l');
-                H2 = MPO_chain[s1  ].GetTensor('r');
-                H12.PutTensor("H1", H1);
-                H12.PutTensor("H2", H2);
-                H12.Launch(H);
-                uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
-                Q[s1-1] = find_highest_gap(En, chi, info);
-
-                H1 = MPO_chain[s1].GetTensor('l');
-                H2 = MPO_chain[0].GetTensor('r');
-                H12.PutTensor("H1", H1);
-                H12.PutTensor("H2", H2);
-                H12.Launch(H);
-                uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
-                Q[s1+1] = find_highest_gap(En, chi, info);
+                cout << "TEST" << endl;
+                if (s1 != 0)
+                {
+                    H1 = MPO_chain[s1-1].GetTensor('l');
+                    H2 = MPO_chain[s1  ].GetTensor('r');
+                    H12.PutTensor("H1", H1);
+                    H12.PutTensor("H2", H2);
+                    H12.Launch(H);
+                    uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE);   // in mkl use uni10::EigHLazy()
+                    Q[s1-1] = find_highest_gap(En, chi, info);
+                }
+                if (s1 != Q.size()-1)
+                {
+                    H1 = MPO_chain[s1  ].GetTensor('l');
+                    H2 = MPO_chain[s1+1].GetTensor('r');
+                    H12.PutTensor("H1", H1);
+                    H12.PutTensor("H2", H2);
+                    H12.Launch(H);
+                    uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE);  // in mkl use uni10::EigHLazy()
+                    Q[s1+1] = find_highest_gap(En, chi, info);
+                }
+                cout << "TEST2" << endl;
             }
-            else if (s1 == Q.size()-1)
-            {
-                H1 = MPO_chain[s1-2].GetTensor('l');
-                H2 = MPO_chain[s1-1].GetTensor('r');
-                H12.PutTensor("H1", H1);
-                H12.PutTensor("H2", H2);
-                H12.Launch(H);
-                uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
-                Q[s1-1] = find_highest_gap(En, chi, info);
 
-                H1 = MPO_chain[s1-1].GetTensor('l');
-                H2 = MPO_chain[0].GetTensor('r');
-                H12.PutTensor("H1", H1);
-                H12.PutTensor("H2", H2);
-                H12.Launch(H);
-                uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
-                Q[0] = find_highest_gap(En, chi, info);
-            }
             else
             {
-                H1 = MPO_chain[s1-1].GetTensor('l');
-                H2 = MPO_chain[s1  ].GetTensor('r');
-                H12.PutTensor("H1", H1);
-                H12.PutTensor("H2", H2);
-                H12.Launch(H);
-                uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
-                Q[s1-1] = find_highest_gap(En, chi, info);
-
-                H1 = MPO_chain[s1  ].GetTensor('l');
-                H2 = MPO_chain[s1+1].GetTensor('r');
-                H12.PutTensor("H1", H1);
-                H12.PutTensor("H2", H2);
-                H12.Launch(H);
-                uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE); 
-                Q[s1+1] = find_highest_gap(En, chi, info);
+                ostringstream err;
+                err << "tSDRG support OBC and PBC only";
+                throw runtime_error(err.str());
             }
         }
         
@@ -593,14 +639,17 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
     }
 
     /// Contract last two site hamitonian
-    /// 1 and 0; use spcai tools GetTensorPBC for getting real term
-    H1 = MPO_chain[1].GetTensorPBC('l');
-    H2 = MPO_chain[0].GetTensorPBC('r');
-    H12.PutTensor("H1", H1);
-    H12.PutTensor("H2", H2);
-    H12.Launch(H_last);
-    //H_last.PrintDiagram();
-    uni10::Permute(H_last, {-3, -1, -4, -2}, 2, uni10::INPLACE);
+    if (BC == "PBC")
+    {
+        /// 1 and 0; use spcal tools GetTensorPBC for getting real term
+        H1 = MPO_chain[1].GetTensorPBC('l');
+        H2 = MPO_chain[0].GetTensorPBC('r');
+        H12.PutTensor("H1", H1);
+        H12.PutTensor("H2", H2);
+        H12.Launch(H_last);
+        //H_last.PrintDiagram();
+        uni10::Permute(H_last, {-3, -1, -4, -2}, 2, uni10::INPLACE);
+    }
 
     /// 0 and 1 , use H1 and H2 to find isometry two legs of origin picture
     H1 = MPO_chain[0].GetTensor('l');
@@ -608,9 +657,12 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
     H12.PutTensor("H1", H1);
     H12.PutTensor("H2", H2);
     H12.Launch(H);
-    
+
     /// diagonal
-    H_block = H.GetBlock() + H_last.GetBlock();
+    if (BC == "PBC")
+        H_block = H.GetBlock() + H_last.GetBlock();
+    else if (BC == "OBC")
+        H_block = H.GetBlock();
     uni10::EigH(H_block, En, state, uni10::INPLACE);
     uni10::Resize(state, 1, state.col(), uni10::INPLACE);
 
