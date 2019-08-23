@@ -13,7 +13,6 @@ using namespace std;
 class MPO
 {
 	private:
-		string model;
 		char mpo_loc;
 		int phys_dim;
 		int virt_dim;
@@ -30,6 +29,7 @@ class MPO
 	public:
 		MPO(string, char, float, ...);
 
+		string model;
 		uni10::UniTensor<double> GetTensor();
 		uni10::UniTensor<double> GetTensor(char);
 		uni10::UniTensor<double> GetTensorPBC(char);

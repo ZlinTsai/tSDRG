@@ -11,7 +11,7 @@ MPO::MPO(string model_name, char loc, float spin, ...)
         for (int i=0; i<3; i++)
             para.push_back(va_arg(vl, double) );
 
-        MPO_XXZ_OBC(loc, spin, para[0], para[1], para[2]);        // para : Jx, Jz, h
+        MPO_XXZ_OBC(loc, spin, para[0], para[1], para[2]);     // para : Jx, Jz, h
     }
     else if (model_name == "XXZ_PBC")
     {
@@ -405,7 +405,7 @@ uni10::UniTensor<double> MPO::GetTensorSS()
 
         case 'm':
             {
-                int single = virt_dim*(virt_dim - 1);
+                int single = virt_dim * (virt_dim - 1);
                 mpo = mpo_m[single];
             }
             break;
