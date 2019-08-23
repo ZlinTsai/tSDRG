@@ -13,7 +13,7 @@
 
 using namespace std;
 
-void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, double Jz, double h, int Jseed)
+void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, double Jz, double h, int Jseed)
 {
     random_device rd;            // non-deterministic generator.
     mt19937 genRandom(rd() );    // use mersenne twister and seed is rd.
@@ -21,43 +21,53 @@ void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, d
 
     uniform_real_distribution<double> Dist_J(nextafter(0.0, 1.0), 1.0); // probability distribution of J rand(0^+ ~ 1)
 
-    /// create MPO chain for PBC
-    /* vector<MPO> MPO_chain;
-    for(int i=0; i<L; i++)
-    {
-        double jvar = Dist_J(genFixed);
-        jvar = Distribution_Random_Variable(Pdis, jvar, Jdis);
-        J_list.push_back(jvar);
-        MPO W("XXZ_PBC", 'm', S, J_list[i], Jz*J_list[i], h);
-        MPO_chain.push_back(W);
-    } */
-
-    /// create coupling list and MPO chain for OBC
+    /// create coupling list and MPO chain for OBC or PBC
     vector<double> J_list;
     vector<MPO> MPO_chain;
-    for(int i=0; i<L; i++)
+    if (BC == "PBC")
     {
-        double jvar = Dist_J(genFixed);
-        jvar = Distribution_Random_Variable(Pdis, jvar, Jdis);
-
-        if(i == 0)
+        for(int i=0; i<L; i++)
         {
-            J_list.push_back(jvar);     //random chain 
-            MPO W("XXZ_OBC", 'l', S, J_list[i], Jz*J_list[i], h);
-            MPO_chain.push_back(W);
-        }
-        else if (i > 0 && i < L-1)
-        {
-            J_list.push_back(jvar);     //random chain 
-            MPO W("XXZ_OBC", 'm', S, J_list[i], Jz*J_list[i], h);
-            MPO_chain.push_back(W);
-        }
-        else
-        {
-            MPO W("XXZ_OBC", 'r', S, 1.0, Jz, h);
+            double jvar = Dist_J(genFixed);
+            jvar = Distribution_Random_Variable(Pdis, jvar, Jdis);
+            J_list.push_back(jvar);
+            MPO W("XXZ_PBC", 'm', S, J_list[i], Jz*J_list[i], h);
             MPO_chain.push_back(W);
         }
     }
+    else if (BC == "OBC")
+    {
+        for(int i=0; i<L; i++)
+        {
+            double jvar = Dist_J(genFixed);
+            jvar = Distribution_Random_Variable(Pdis, jvar, Jdis);
+
+            if(i == 0)
+            {
+                J_list.push_back(jvar);     //random chain 
+                MPO W("XXZ_OBC", 'l', S, J_list[i], Jz*J_list[i], h);
+                MPO_chain.push_back(W);
+            }
+            else if (i > 0 && i < L-1)
+            {
+                J_list.push_back(jvar);     //random chain 
+                MPO W("XXZ_OBC", 'm', S, J_list[i], Jz*J_list[i], h);
+                MPO_chain.push_back(W);
+            }
+            else
+            {
+                MPO W("XXZ_OBC", 'r', S, 1.0, Jz, h);
+                MPO_chain.push_back(W);
+            }
+        }
+    }
+    else
+    {
+        ostringstream err;
+        err << "tSDRG support OBC and PBC only";
+        throw runtime_error(err.str());
+    }
+
 
     /// Save tree tensor network
     string file, dis, folder, file_name, file_name1, file_name2, file_nameS;
@@ -73,7 +83,7 @@ void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, d
         dis = to_string( (int)(Jdis*10) );
 
     /// create folder
-    folder = "TTN/algo/Jdis" + dis + "/L" + to_string(L) + "_P" + to_string(Pdis) + "_m" + to_string(chi) + "_" + to_string(Jseed);
+    folder = "TTN/" + BC + "/Jdis" + dis + "/L" + to_string(L) + "_P" + to_string(Pdis) + "_m" + to_string(chi) + "_" + to_string(Jseed);
     string str = "mkdir -p " + folder;
     const char *mkdir = str.c_str();
     const int dir_err = system(mkdir);
@@ -88,7 +98,7 @@ void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, d
     vector<double> En = J_list;                  // J_list will earse to one, and return ground energy.
     bool info = 1;                               // True; if tSDRG can not find non-zero gap, info return 0, and stop this random seed.
     bool save_RG_info = 1;                       // save gaps at RG stage 
-    tSDRG_PBC(MPO_chain, En, w_up, w_loc, chi, dis, Pdis, Jseed, save_RG_info, info);
+    tSDRG(MPO_chain, En, w_up, w_loc, chi, dis, Pdis, Jseed, save_RG_info, info);
 
     /// check info if can not RG_J
     if (info == 0)
@@ -254,14 +264,14 @@ void errMsg(char *arg)
     cerr << "Need 8-parameter:" << endl;
     cerr << "./job.exe <system size> <keep state of RG procedure> <Prob distribution> <disorder> <algo> <seed1> <seed2>\n" << endl;
     cerr << "Example:" << endl;
-    cerr << "./job.exe 32 8 10 0.1 algo 1 1\n" << endl;
+    cerr << "./job.exe 32 8 10 0.1 PBC 1 1\n" << endl;
 }
 
 int main(int argc, char *argv[])
 {
     int L;                      // system size
     int chi;                    // keep state of isometry
-    string algo;                // algo ~ algo7
+    string BC;                  // boundary condition
     int Pdis;                   // model of random variable disturbution
     double Jdis;                // J-coupling disorder strength
     int seed1;                  // random seed number in order to repeat data
@@ -276,7 +286,7 @@ int main(int argc, char *argv[])
         stringstream(argv[2]) >> chi;
         stringstream(argv[3]) >> Pdis;
         stringstream(argv[4]) >> Jdis;
-        algo = argv[5];
+        BC = argv[5];
         stringstream(argv[6]) >> seed1;
         stringstream(argv[7]) >> seed2;
     }
@@ -288,7 +298,7 @@ int main(int argc, char *argv[])
 
     for (int Jseed=seed1; Jseed<=seed2; Jseed++)
     {
-        generateTTN(L, chi, Pdis, Jdis, algo, S, Jz, h, Jseed);
+        tSDRG_XXZ(L, chi, Pdis, Jdis, BC, S, Jz, h, Jseed);
     }
 
     return 0;
