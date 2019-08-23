@@ -54,7 +54,7 @@ void generateTTN(int L, int chi, int Pdis, double Jdis, string algo, double S, d
         }
         else
         {
-            MPO W("XXZ_OBC", 'r', S, 1, Jz, h);
+            MPO W("XXZ_OBC", 'r', S, 1.0, Jz, h);
             MPO_chain.push_back(W);
         }
     }

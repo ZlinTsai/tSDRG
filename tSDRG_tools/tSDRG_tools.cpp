@@ -522,7 +522,6 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
         {
             if (BC == "PBC")
             {
-            
                 if (s1 == 0)
                 {
                     H1 = MPO_chain[Q.size()-2].GetTensor('l');   // -2 by erase MPO[s2] above line
@@ -599,7 +598,6 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
         
             else if (BC == "OBC")
             {
-                cout << "TEST" << endl;
                 if (s1 != 0)
                 {
                     H1 = MPO_chain[s1-1].GetTensor('l');
@@ -609,6 +607,7 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
                     H12.Launch(H);
                     uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE);   // in mkl use uni10::EigHLazy()
                     Q[s1-1] = find_highest_gap(En, chi, info);
+                    cout << Q[s1-1] << endl;
                 }
                 if (s1 != Q.size()-1)
                 {
@@ -619,8 +618,8 @@ void tSDRG_PBC(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTenso
                     H12.Launch(H);
                     uni10::EigHLazy(H.GetBlock(), En, state, uni10::INPLACE);  // in mkl use uni10::EigHLazy()
                     Q[s1+1] = find_highest_gap(En, chi, info);
+                    cout << Q[s1+1] << endl;
                 }
-                cout << "TEST2" << endl;
             }
 
             else
