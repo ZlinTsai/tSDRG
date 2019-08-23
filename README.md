@@ -3,6 +3,7 @@
 tSDRG is a powerful and efficient algorithm for disorder system.
 
 This algorithm is based on [PhysRevB.89.214203](https://link.aps.org/doi/10.1103/PhysRevB.89.214203) and [Andrew M. Goldsborough's github](https://github.com/AMGoldsborough/tSDRG) for Matlab, and this code is written in C++ language.
+More detail, plz read [tSDRG_algorithm.pdf](./tSDRG_algorithm.pdf)
 
 ## Requirements
 
