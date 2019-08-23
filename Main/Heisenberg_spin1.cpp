@@ -98,7 +98,9 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
     vector<double> En = J_list;                  // J_list will earse to one, and return ground energy.
     bool info = 1;                               // True; if tSDRG can not find non-zero gap, info return 0, and stop this random seed.
     bool save_RG_info = 1;                       // save gaps at RG stage 
+
     tSDRG(MPO_chain, En, w_up, w_loc, chi, dis, Pdis, Jseed, save_RG_info, info);
+    //tSDRG_regular(MPO_chain, En, w_up, w_loc, chi, dis, Pdis, Jseed, save_RG_info, info);
 
     /// check info if can not RG_J
     if (info == 0)
