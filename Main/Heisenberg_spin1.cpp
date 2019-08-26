@@ -69,7 +69,7 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
     }
 
 
-    /// Save tree tensor network
+    /// create folder in order to save data
     string file, dis, folder, file_name, file_name1, file_name2, file_nameS;
     if (Jdis < 1.0)
         dis = "0" + to_string( (int)(Jdis*10) );
@@ -82,8 +82,17 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
     else if (Jdis > 1.0)
         dis = to_string( (int)(Jdis*10) );
 
+
+    /// return: TTN(w_up and w_loc) and energy spectrum of top tensor
+    vector<uni10::UniTensor<double> > w_up;      // w_up is isometry tensor = VT
+    vector<int> w_loc;                           // location of each w
+    vector<double> En = J_list;                  // J_list will earse to one, and return ground energy.
+    bool info = 1;                               // True; if tSDRG can not find non-zero gap, info return 0, and stop this random seed.
+    bool save_RG_info = 0;                       // save gaps at RG stage 
+    tSDRG(MPO_chain, En, w_up, w_loc, chi, dis, Pdis, Jseed, save_RG_info, info);
+
     /// create folder
-    folder = "TTN/" + BC + "/Jdis" + dis + "/L" + to_string(L) + "_P" + to_string(Pdis) + "_m" + to_string(chi) + "_" + to_string(Jseed);
+    folder = "data/" + BC + "/Jdis" + dis + "/L" + to_string(L) + "_P" + to_string(Pdis) + "_m" + to_string(chi) + "_" + to_string(Jseed);
     string str = "mkdir -p " + folder;
     const char *mkdir = str.c_str();
     const int dir_err = system(mkdir);
@@ -92,13 +101,6 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
         cout << "Error creating directory!" << endl;
         exit(1);
     }
-
-    vector<uni10::UniTensor<double> > w_up;      // w_up is isometry tensor = VT
-    vector<int> w_loc;                           // location of each w
-    vector<double> En = J_list;                  // J_list will earse to one, and return ground energy.
-    bool info = 1;                               // True; if tSDRG can not find non-zero gap, info return 0, and stop this random seed.
-    bool save_RG_info = 0;                       // save gaps at RG stage 
-    tSDRG(MPO_chain, En, w_up, w_loc, chi, dis, Pdis, Jseed, save_RG_info, info);
 
     /// check info if can not RG_J
     if (info == 0)
@@ -117,7 +119,7 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
     //string top1 = Decision_tree(w_loc, true);
 
     /// create isometry of other part
-    /*vector<uni10::UniTensor<double> > w_down;    // w_down
+    vector<uni10::UniTensor<double> > w_down;    // w_down
     uni10::UniTensor<double> kara;
     w_down.assign(L-1, kara);
     for (int i = 0; i < w_up.size(); i++)
@@ -125,6 +127,14 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
         w_down[i] = w_up[i];
         uni10::Permute(w_down[i], {-3, -1, 1}, 2, uni10::INPLACE);
     }
+
+    /// save TTN; Don't do this. Your HDD will be fill with TTN
+    /*file = folder;
+    for (int i = 0; i < w_up.size(); i++)
+    {
+        file = folder + "/w_up" + to_string(i);
+        w_up[i].Save(file);
+    }*/
 
     /// save disorder coupling J list 
     vector<double> corr12;            // corr <S1><S2>
@@ -142,18 +152,11 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
         corr12.push_back(Correlation_St(i, w_up, w_down, w_loc) );
     }
     fout.flush();
-    fout.close();*/
-    
-    /// save tensor
-    /*file = folder;
-    for (int i = 0; i < w_up.size(); i++)
-    {
-        file = folder + "/w_up" + to_string(i);
-        w_up[i].Save(file);
-    }*/
+    fout.close();
+
 
     /// save merge order
-    /*file = folder + "/w_loc.csv";
+    file = folder + "/w_loc.csv";
     fout.open(file);
     if (!fout)
     {
@@ -186,11 +189,11 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
     fout.close();
     string top1 = Decision_tree(w_loc, true);
     
-    /// correlation and string order parameter print
-    double corr, corr1 ,corr2, Oz;
-    file_name1 = "data/correlation/" + algo + "/Jdis" + dis + "/L" + to_string(L) + "_P" + to_string(Pdis) + "_m" + to_string(chi) + "_" + to_string(Jseed) + "_corr1.csv";
-    file_name2 = "data/correlation/" + algo + "/Jdis" + dis + "/L" + to_string(L) + "_P" + to_string(Pdis) + "_m" + to_string(chi) + "_" + to_string(Jseed) + "_corr2.csv";
-    file_nameS = "data/String/" + algo + "/Jdis" + dis + "/L" + to_string(L) + "_P" + to_string(Pdis) + "_m" + to_string(chi) + "_" + to_string(Jseed) + "_string.csv";
+    /// bulk correlation and string order parameter print
+    double corr, corr1 ,corr2, sop;
+    file_name1 = folder + "/L" + to_string(L) + "_P" + to_string(Pdis) + "_m" + to_string(chi) + "_" + to_string(Jseed) + "_corr1.csv";
+    file_name2 = folder + "/L" + to_string(L) + "_P" + to_string(Pdis) + "_m" + to_string(chi) + "_" + to_string(Jseed) + "_corr2.csv";
+    file_nameS = folder + "/L" + to_string(L) + "_P" + to_string(Pdis) + "_m" + to_string(chi) + "_" + to_string(Jseed) + "_string.csv";
     ofstream fout1(file_name1);
     ofstream fout2(file_name2);
     ofstream foutS(file_nameS);
@@ -200,21 +203,22 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
     int site1;
     int site2;
     int r;
-    int loop = 0;
-    for (site1=0; site1<1; site1 += 10)
+    /// TODO: for OBC. Now is good for PBC.
+    for (site1 = 0; site1 < L-1; site1 += 1)
     {
-        int step = 2;
-        for (site2=site1+4; site2<5; site2 += step)
+        int nn;
+        if (site1 == 0)
+            nn = 1;
+        else
+            nn = 10;
+
+        for (site2 = site1+nn; site2 < L; site2 += 1)
         {
             r = site2 - site1;
-            if (r >= 10 && r < 100)
-                step = 4;
-            else if (r >= 100)
-                step = 10;
 
             if (r <= L/2)
             {
-                cout << "TEST: " << site1 << " & " << site2 << endl;
+                //cout << "TEST: " << site1 << " & " << site2 << endl;
                 corr = Correlation_StSt(site1, site2, w_up, w_down, w_loc);
                 corr1 = corr12[site1];
                 corr2 = corr12[site2];
@@ -222,8 +226,11 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
                 fout1 << setprecision(16) << site1 << "," << site2 << "," << corr << endl;
                 fout2 << setprecision(16) << site1 << "," << site2 << "," << corr - corr1*corr2 << endl;
 
-                Oz = Correlation_String(site1, site2, w_up, w_down, w_loc);
-                foutS << setprecision(16) << site1 << "," << site2 << "," << Oz << endl;
+                if (r == L/2)
+                {
+                    sop = Correlation_String(site1, site2, w_up, w_down, w_loc);
+                    foutS << setprecision(16) << site1 << "," << site2 << "," << sop << endl;
+                }
             }
         }
     }
@@ -235,7 +242,7 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
     foutS.close();
     
     /// Schmidt value = Entanglement spectrum
-    string top = Decision_tree(w_loc, false);       // find location of top tensor
+    /*string top = Decision_tree(w_loc, false);       // find location of top tensor
     vector<double> schmidt_value;
     schmidt_value = Schmidt_Value(w_up.back() );
     
