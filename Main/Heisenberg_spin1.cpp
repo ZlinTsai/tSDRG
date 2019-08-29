@@ -69,16 +69,18 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
     bool save_RG_info = 0;                       // save gaps at RG stage 
     tSDRG(MPO_chain, En, w_up, w_loc, chi, dis, Pdis, Jseed, save_RG_info, info);
 
+    /// create isometry of other part
+    vector<uni10::UniTensor<double> > w_down;
+    uni10::UniTensor<double> kara;
+    w_down.assign(L-1, kara);
+    for (int i = 0; i < w_up.size(); i++)
+    {
+        w_down[i] = w_up[i];
+        uni10::Permute(w_down[i], {-3, -1, 1}, 2, uni10::INPLACE);
+    }
+
     /// create folder
     folder = "data/" + BC + "/Jdis" + dis + "/L" + to_string(L) + "_P" + to_string(Pdis) + "_m" + to_string(chi) + "_" + to_string(Jseed);
-    string str = "mkdir -p " + folder;
-    const char *mkdir = str.c_str();
-    const int dir_err = system(mkdir);
-    if (dir_err == -1)
-    {
-        cout << "Error creating directory!" << endl;
-        exit(1);
-    }
 
     /// check info if can not RG_J
     if (info == 0)
@@ -88,23 +90,23 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
     }
     else
     {
+        /// mkdir -p data
+        string str = "mkdir -p " + folder;
+        const char *mkdir = str.c_str();
+        const int dir_err = system(mkdir);
+        if (dir_err == -1)
+        {
+            cout << "Error creating directory!" << endl;
+            exit(1);
+        }
+
         cout << "finish in " << folder << endl;
     }
 
     for (int i=0; i<10; i++)
         cout << En[i] << endl;
 
-    //string top1 = Decision_tree(w_loc, true);
-
-    /// create isometry of other part
-    vector<uni10::UniTensor<double> > w_down;    // w_down
-    uni10::UniTensor<double> kara;
-    w_down.assign(L-1, kara);
-    for (int i = 0; i < w_up.size(); i++)
-    {
-        w_down[i] = w_up[i];
-        uni10::Permute(w_down[i], {-3, -1, 1}, 2, uni10::INPLACE);
-    }
+    //string top = Decision_tree(w_loc, true);
 
     /// save TTN; Don't do this. Your HDD will be fill with TTN
     /*file = folder;
@@ -247,7 +249,7 @@ void errMsg(char *arg)
 {
     cerr << "Usage: " << arg << " [options]" << endl;
     cerr << "Need 8-parameter:" << endl;
-    cerr << "./job.exe <system size> <keep state of RG procedure> <Prob distribution> <disorder> <algo> <seed1> <seed2>\n" << endl;
+    cerr << "./job.exe <system size> <keep state of RG procedure> <Prob distribution> <disorder strength> <boundary condition> <seed1> <seed2>\n" << endl;
     cerr << "Example:" << endl;
     cerr << "./job.exe 32 8 10 0.1 PBC 1 1\n" << endl;
 }
