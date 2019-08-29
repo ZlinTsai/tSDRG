@@ -5,7 +5,7 @@ UNI10_ROOT    := /usr/local/uni10
 ROOTS         := /usr/local/uni10
 MAINSCRIPT    := $(code)
 SRCDIRS       := ../Operator ../Hamiltonian ../MPO ../tSDRG_tools
-SRC           := operator.cpp hamiltonian.cpp mpo.cpp tSDRG_tools.cpp measure_PBC.cpp
+SRC           := operator.cpp hamiltonian.cpp mpo.cpp tSDRG_tools.cpp measure.cpp
 
 # Check variable
 ifeq ($(wildcard $(code)),)

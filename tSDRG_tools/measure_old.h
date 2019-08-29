@@ -20,13 +20,19 @@ vector<double> Schmidt_Value(uni10::UniTensor<double> top);
 
 vector<double> Energy_Spectrum(vector<MPO>& MPO_chain, vector<uni10::UniTensor<double> > VTs, vector<uni10::UniTensor<double> > Vs, vector<int> Vs_loc);
 
-double Correlation_SzSz(int Si,int Sj, vector<uni10::UniTensor<double> > VTs, vector<uni10::UniTensor<double> > Vs, vector<int> Vs_loc);
-
 double Correlation_SxSx(int Si,int Sj,vector<uni10::UniTensor<double> > VTs, vector<uni10::UniTensor<double> > Vs, vector<int> Vs_loc);
+
+double Correlation_SySy(int Si,int Sj,vector<uni10::UniTensor<double> > VTs, vector<uni10::UniTensor<double> > Vs, vector<int> Vs_loc);
+
+double Correlation_SzSz(int Si,int Sj, vector<uni10::UniTensor<double> > VTs, vector<uni10::UniTensor<double> > Vs, vector<int> Vs_loc);
 
 double Correlation_StSt(int Si,int Sj,vector<uni10::UniTensor<double> > VTs, vector<uni10::UniTensor<double> > Vs, vector<int> Vs_loc);
 
 double Correlation_String(int Si,int Sj, vector<uni10::UniTensor<double> > VTs, vector<uni10::UniTensor<double> > Vs, vector<int> Vs_loc);
+
+double Correlation_Sx(int Si, vector<uni10::UniTensor<double> > VTs, vector<uni10::UniTensor<double> > Vs, vector<int> Vs_loc);
+
+double Correlation_iSy(int Si, vector<uni10::UniTensor<double> > VTs, vector<uni10::UniTensor<double> > Vs, vector<int> Vs_loc);
 
 double Correlation_Sz(int Si, vector<uni10::UniTensor<double> > VTs, vector<uni10::UniTensor<double> > Vs, vector<int> Vs_loc);
 

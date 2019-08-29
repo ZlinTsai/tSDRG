@@ -9,7 +9,7 @@
 #include <uni10.hpp>
 #include "../MPO/mpo.h"
 #include "../tSDRG_tools/tSDRG_tools.h"
-#include "../tSDRG_tools/measure_PBC.h"
+#include "../tSDRG_tools/measure.h"
 
 using namespace std;
 
