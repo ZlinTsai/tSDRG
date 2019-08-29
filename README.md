@@ -61,7 +61,16 @@ make code=yourcode.cpp name=yourcode.exe
 
 Refer Main/demo.cpp
 
+Start tSDRG for XXZ model:
 
+L    = system size 
+chi  = keep state of RG procedure
+Pdis = model of random variable disturbution (10 is power-law)
+Jdis = J-coupling disorder strength
+BC   = boundary condition
+S    = spin type
+Jz   = z-axis strength ( =1 is XXX model)
+h    = external magnetic field
 
 ```c++
 tSDRG_XXZ(L, chi, Pdis, Jdis, BC, S, Jz, h, Jseed);
