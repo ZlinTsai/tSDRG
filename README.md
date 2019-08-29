@@ -49,7 +49,7 @@ make code=yourcode.cpp name=yourcode.exe
     * Hamiltonian model
 
 * tSDRG_tools
-    * tSDRG main algorithm and other tools of  tSDRG 
+    * tSDRG main algorithm and measure tools
     
 * tSDRG_net
     * network file
@@ -59,8 +59,12 @@ make code=yourcode.cpp name=yourcode.exe
 
 ## Tutorials
 
+Refer Main/demo.cpp
+
+
+
 ```c++
-generateTTN(L, chi, Pdis, Jdis, algo, S, Jz, h, Jseed);
+tSDRG_XXZ(L, chi, Pdis, Jdis, BC, S, Jz, h, Jseed);
 ```
 
 Coming sooooooooon
