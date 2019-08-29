@@ -19,9 +19,9 @@ $ git clone https://github.com/ZlinTsai/tSDRG.git
 $ cd Main
 ```
 
-## Compile command-line by makefile
+## Compiler command-line by makefile
 
-If you are first compile, remove objects directory plz.
+If you first compile tSDRG, remove objects directory plz.
 
 ```shell
 rm -rf object
