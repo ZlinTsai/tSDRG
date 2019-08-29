@@ -19,7 +19,13 @@ $ git clone https://github.com/ZlinTsai/tSDRG.git
 $ cd Main
 ```
 
-## Compiler command-line by makefile
+## Compile command-line by makefile
+
+If you are first compile, remove objects directory plz.
+
+```shell
+rm -rf object
+```
 
 PLZ chnage makefile UNI10_ROOT and ROOTS to your uni10 directory
 
