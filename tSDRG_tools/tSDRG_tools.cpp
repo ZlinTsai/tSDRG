@@ -100,6 +100,53 @@ double find_highest_gap(uni10::Matrix<double> En, const int chi, bool& info)
     return maxj;
 }
 
+vector<MPO> generate_MPO_chain(int L, string model, double S, vector<double> J_list, double Jz, double h)
+{
+    /// check boundary condition, ex: model = XXZ_PBC, BC = model[-3] + model[-2] + model[-1] = PBC
+    string BC = "";
+    for (int i = 3; i >= 1; i--)
+        BC += model.at(model.size() - i);
+        
+    vector<MPO> MPO_chain;    
+    if (BC == "PBC")
+    {
+        for(int i=0; i<L; i++)
+        {
+            MPO W("XXZ_PBC", 'm', S, J_list[i], Jz*J_list[i], h);
+            MPO_chain.push_back(W);
+        }
+    }
+    else if (BC == "OBC")
+    {
+        for(int i=0; i<L; i++)
+        {
+            if(i == 0)
+            {
+                MPO W("XXZ_OBC", 'l', S, J_list[i], Jz*J_list[i], h);
+                MPO_chain.push_back(W);
+            }
+            else if (i > 0 && i < L-1)
+            {
+                MPO W("XXZ_OBC", 'm', S, J_list[i], Jz*J_list[i], h);
+                MPO_chain.push_back(W);
+            }
+            else
+            {
+                MPO W("XXZ_OBC", 'r', S, 1.0, Jz, h);
+                MPO_chain.push_back(W);
+            }
+        }
+    }
+    else
+    {
+        ostringstream err;
+        err << "tSDRG support OBC and PBC only";
+        throw runtime_error(err.str());
+    }
+
+    return MPO_chain;  
+}
+
 /// tSDRG
 void tSDRG(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTensor<double> >& VTs, vector<int>& Vs_loc, const int chi, string dis, const int Pdis, const int Jseed, bool save_RG_info, bool& info)
 {
@@ -142,6 +189,7 @@ void tSDRG(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTensor<do
     uni10::EigH(H_block, En, state, uni10::INPLACE);
     double coeff = find_highest_gap(En, chi, info);
 
+    /// STEP.2: Create a queue Q to store possible largest energy gaps
     /// transfor coupling to energy scale (highest gap); energy spactrum of S = 1 is -2J, -J, J, so that highest gaps = 2J
     for (int i=0; i<Q.size(); i++)
     {
@@ -151,7 +199,7 @@ void tSDRG(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTensor<do
     
     while(MPO_chain.size() > 2)
     {
-        /// find max gap = max{Q}
+        /// STEP.3: Find the largest gap in max{Q}
         auto Qmax = max_element(Q.begin(), Q.end() );      // max_element return iterators, not values. ( double Qmax = *Qmax; use *iterators to get values.
         int s1 = distance(Q.begin(), Qmax);                // return distance from 0 to Qmax. Note: distance(iterators, iterators) input is iter NOT value.
         int s2 = (s1 == MPO_chain.size()-1 ? 0 : s1 + 1);          // s1 = site1 and "coupling label", s2 = site2, for PBC s2+1 = 0 at last site.
@@ -169,7 +217,7 @@ void tSDRG(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTensor<do
         H12.PutTensor("H2", H2);
         H12.Launch(H);
         
-        /// diagonal local hamitonian
+        /// STEP.4: Diagonalize the local Hamiltonian with the largest gap Qmax
         H_block = H.GetBlock();
         uni10::EigH(H_block, En, state, uni10::INPLACE);
 
@@ -185,7 +233,7 @@ void tSDRG(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTensor<do
             RG_lowest_gaps.push_back(gap_lowest);
         }
 
-        /// truncation
+        /// STEP.5: Define the energy gap in the spectrum and truncation system
         chi_loc = H.GetBlock().col();
         if (chi_loc > chi)
             Truncation(En, state, chi, chi_loc, info); 
@@ -194,6 +242,7 @@ void tSDRG(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTensor<do
         if (info == 0)
             return;
 
+        /// STEP.6: Build a three-leg isometry tensor
         /// create isometry VT (V_Transpose)
         uni10::Bond leg_up(uni10::BD_IN, chi_loc);
         uni10::Bond leg_L(uni10::BD_OUT, H1.GetBlock().row() );
@@ -208,6 +257,7 @@ void tSDRG(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTensor<do
         uni10::UniTensor<double> V = VT;
         uni10::Permute(V, {-1, -3, 1}, 2, uni10::INPLACE);
 
+        /// STEP.7: Renormalize the pair of blocks with the largest gap by contracting the twoblock tensors with V and VT
         /// merge two site MPO, Note: this order is import for V and VT (check dim of tensor's legs)
         RG_MPO(MPO_chain[s1], MPO_chain[s2], VT, V);
         
@@ -236,6 +286,7 @@ void tSDRG(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTensor<do
             throw runtime_error(err.str());
         }
         
+        /// STEP.8: Update the queue Q
         /// RG coupling into merge list, notice that eage mpo is OBC or PBC
         if (MPO_chain.size() != 2)
         {
@@ -314,7 +365,6 @@ void tSDRG(vector<MPO>& MPO_chain, vector<double>& Q, vector<uni10::UniTensor<do
                     Q[s1+1] = find_highest_gap(En, chi, info);
                 }
             }
-        
             else if (BC == "OBC")
             {
                 if (s1 != 0)

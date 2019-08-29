@@ -23,7 +23,6 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
 
     /// create coupling list and MPO chain for OBC or PBC
     vector<double> J_list;
-    vector<MPO> MPO_chain;
     if (BC == "PBC")
     {
         for(int i=0; i<L; i++)
@@ -31,43 +30,22 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
             double jvar = Dist_J(genFixed);
             jvar = Distribution_Random_Variable(Pdis, jvar, Jdis);
             J_list.push_back(jvar);
-            MPO W("XXZ_PBC", 'm', S, J_list[i], Jz*J_list[i], h);
-            MPO_chain.push_back(W);
         }
-    }
+    }    
     else if (BC == "OBC")
     {
-        for(int i=0; i<L; i++)
+        for(int i=0; i<L-1; i++)
         {
             double jvar = Dist_J(genFixed);
             jvar = Distribution_Random_Variable(Pdis, jvar, Jdis);
-
-            if(i == 0)
-            {
-                J_list.push_back(jvar);     //random chain 
-                MPO W("XXZ_OBC", 'l', S, J_list[i], Jz*J_list[i], h);
-                MPO_chain.push_back(W);
-            }
-            else if (i > 0 && i < L-1)
-            {
-                J_list.push_back(jvar);     //random chain 
-                MPO W("XXZ_OBC", 'm', S, J_list[i], Jz*J_list[i], h);
-                MPO_chain.push_back(W);
-            }
-            else
-            {
-                MPO W("XXZ_OBC", 'r', S, 1.0, Jz, h);
-                MPO_chain.push_back(W);
-            }
+            J_list.push_back(jvar);
         }
-    }
-    else
-    {
-        ostringstream err;
-        err << "tSDRG support OBC and PBC only";
-        throw runtime_error(err.str());
+
     }
 
+    /// STEP.1: Decompose the Hamiltonian into MPO blocks
+    vector<MPO> MPO_chain;
+    MPO_chain = generate_MPO_chain(L, "XXZ_" + BC, S, J_list, Jz, h);
 
     /// create folder in order to save data
     string file, dis, folder, file_name, file_name1, file_name2, file_nameS;
@@ -187,7 +165,7 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
     }
     fout.flush();
     fout.close();
-    string top1 = Decision_tree(w_loc, true);
+    string top1 = Decision_tree(w_loc, false);
     
     /// bulk correlation and string order parameter print
     double corr, corr1 ,corr2, sop;
