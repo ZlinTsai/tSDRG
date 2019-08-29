@@ -48,7 +48,7 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
     MPO_chain = generate_MPO_chain(L, "XXZ_" + BC, S, J_list, Jz, h);
 
     /// create folder in order to save data
-    string file, dis, folder, file_name, file_name1, file_name2, file_nameS;
+    string dis;
     if (Jdis < 1.0)
         dis = "0" + to_string( (int)(Jdis*10) );
     else if (Jdis == 1.0)
