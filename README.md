@@ -21,6 +21,12 @@ $ cd Main
 
 ## Compiler command-line by makefile
 
+If you first compile tSDRG, remove objects directory plz.
+
+```shell
+rm -rf object
+```
+
 PLZ chnage makefile UNI10_ROOT and ROOTS to your uni10 directory
 
 UNI10_ROOT    := /usr/local/uni10
