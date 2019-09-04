@@ -95,8 +95,8 @@ void tSDRG_XXZ(int L, int chi, int Pdis, double Jdis, string BC, double S, doubl
 
 
     /// show correlation
-    int site1 = 1;
-    int site2 = 2;
+    int site1 = 0;
+    int site2 = L/2;
     double corr = Correlation_StSt(site1, site2, w_up, w_down, w_loc);
     double corr1 = corr_On_site[site1];
     double corr2 = corr_On_site[site2];
