@@ -24,7 +24,7 @@ $ cd Main
 If you first compile tSDRG, remove objects directory plz.
 
 ```shell
-rm -rf object
+$ rm -rf object
 ```
 
 PLZ chnage makefile UNI10_ROOT and ROOTS to your uni10 directory
@@ -34,7 +34,7 @@ UNI10_ROOT    := /usr/local/uni10
 ROOTS         := /usr/local/uni10
 
 ```shell
-make code=yourcode.cpp name=yourcode.exe
+$ make code=yourcode.cpp name=yourcode.exe
 ```
 
 ## Directory
@@ -49,7 +49,7 @@ make code=yourcode.cpp name=yourcode.exe
     * Hamiltonian model
 
 * tSDRG_tools
-    * tSDRG main algorithm and other tools of  tSDRG 
+    * tSDRG main algorithm and measure tools
     
 * tSDRG_net
     * network file
@@ -59,8 +59,24 @@ make code=yourcode.cpp name=yourcode.exe
 
 ## Tutorials
 
+Refer Main/demo.cpp
+
+Start tSDRG for XXZ model:
+
 ```c++
-generateTTN(L, chi, Pdis, Jdis, algo, S, Jz, h, Jseed);
+tSDRG_XXZ(L, chi, Pdis, Jdis, BC, S, Jz, h, Jseed);
 ```
+
+
+| Option | Description |
+| ------ | ----------- |
+| L      | system size  |
+| chi    | keep state of RG procedure |
+| Pdis   | model of random variable disturbution ( =10 is power-law) |
+| Jdis   | J-coupling disorder strength |
+| BC     | boundary condition |
+| S      | spin type |
+| Jz     | z-axis strength ( =1 is XXX model) |
+| h      | external magnetic field |
 
 Coming sooooooooon
